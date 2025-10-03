@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Page</title>
+    <link rel="stylesheet" href="evaluation.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Evaluate Student's Answers</h1>
+        <div id="evaluation-container">
+            <!-- Questions and Answers will be displayed here -->
+        </div>
+        <button id="submit-evaluation" class="submit-btn">Submit Evaluation</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const evaluationContainer = document.getElementById('evaluation-container');
+            const studentAnswers = JSON.parse(localStorage.getItem('studentAnswers'));
+            const assessmentData = JSON.parse(localStorage.getItem('assessmentData'));
+
+            if (!studentAnswers || !assessmentData) {
+                evaluationContainer.innerHTML = '<p>No answers to evaluate.</p>';
+                return;
+            }
+
+            let totalMarks = 0; // Initialize totalMarks
+
+            // Display MCQs
+            assessmentData.mcqs.forEach((mcq, index) => {
+                const studentAnswer = studentAnswers.mcqs[index] || 'No answer'; // Default if undefined
+                totalMarks += mcq.mark; // Add max mark for this question
+                const mcqElement = document.createElement('div');
+                mcqElement.classList.add('question-box');
+                mcqElement.innerHTML = `
+                    <h3>MCQ Question ${index + 1}: ${mcq.question}</h3>
+                    <p><strong>Student Answer:</strong> ${studentAnswer}</p>
+                    <label>Marks:</label>
+                    <input type="number" id="mcq-mark-${index}" max="${mcq.mark}" placeholder="0">
+                `;
+                evaluationContainer.appendChild(mcqElement);
+            });
+
+            // Display Short Answer Questions
+            assessmentData.shortAnswers.forEach((shortAnswer, index) => {
+                const studentAnswer = studentAnswers.shortAnswers[index] || 'No answer';
+                totalMarks += shortAnswer.mark; // Add max mark for this question
+                const shortAnswerElement = document.createElement('div');
+                shortAnswerElement.classList.add('question-box');
+                shortAnswerElement.innerHTML = `
+                    <h3>Short Answer ${index + 1}: ${shortAnswer.question}</h3>
+                    <p><strong>Student Answer:</strong> ${studentAnswer}</p>
+                    <label>Marks:</label>
+                    <input type="number" id="short-mark-${index}" max="${shortAnswer.mark}" placeholder="0">
+                `;
+                evaluationContainer.appendChild(shortAnswerElement);
+            });
+
+            // Display Long Answer Questions
+            assessmentData.longAnswers.forEach((longAnswer, index) => {
+                const studentAnswer = studentAnswers.longAnswers[index] || 'No answer';
+                totalMarks += longAnswer.mark; // Add max mark for this question
+                const longAnswerElement = document.createElement('div');
+                longAnswerElement.classList.add('question-box');
+                longAnswerElement.innerHTML = `
+                    <h3>Long Answer ${index + 1}: ${longAnswer.question}</h3>
+                    <p><strong>Student Answer:</strong> ${studentAnswer}</p>
+                    <label>Marks:</label>
+                    <input type="number" id="long-mark-${index}" max="${longAnswer.mark}" placeholder="0">
+                `;
+                evaluationContainer.appendChild(longAnswerElement);
+            });
+
+            // Calculate and submit the evaluation
+            document.getElementById('submit-evaluation').addEventListener('click', () => {
+                let obtainedMarks = 0;
+
+                // Calculate total marks for MCQs
+                assessmentData.mcqs.forEach((_, index) => {
+                    const mark = parseInt(document.getElementById(`mcq-mark-${index}`).value);
+                    obtainedMarks += isNaN(mark) ? 0 : mark;
+                });
+
+                // Calculate total marks for Short Answers
+                assessmentData.shortAnswers.forEach((_, index) => {
+                    const mark = parseInt(document.getElementById(`short-mark-${index}`).value);
+                    obtainedMarks += isNaN(mark) ? 0 : mark;
+                });
+
+                // Calculate total marks for Long Answers
+                assessmentData.longAnswers.forEach((_, index) => {
+                    const mark = parseInt(document.getElementById(`long-mark-${index}`).value);
+                    obtainedMarks += isNaN(mark) ? 0 : mark;
+                });
+
+                // Determine Grade
+                const grade = calculateGrade(obtainedMarks, totalMarks);
+
+                // Display total marks and grade
+                alert(`Total Marks: ${obtainedMarks}\nGrade: ${grade}`);
+            });
+        });
+
+        // Function to calculate grade based on total marks
+        function calculateGrade(totalMarks, maxMarks) {
+            const percentage = (totalMarks / maxMarks) * 100;
+            if (percentage >= 90) return 'A';
+            if (percentage >= 75) return 'B';
+            if (percentage >= 50) return 'C';
+            return 'D';
+        }
+    </script>
+</body>
+</html>
