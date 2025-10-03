@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    h2 {
+      color: #4CAF50;
+      margin-bottom: 15px;
+    }
+
+    .container {
+      margin: 20px auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 80%;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f9f9f9;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    input[type="number"] {
+      padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 10px;
+    }
+
+    #allotted-marks, #resultsTable {
+      margin-top: 20px;
+    }
+
+    p {
+      margin-bottom: 10px;
+    }
+
+    .centered {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <center><h2>ADMIN PAGE</h2></center><br>
+
+  <!-- Step 1: Evaluator inputs max marks for each section -->
+  <h3>Step 1: Set Maximum Marks for Each Section</h3>
+  <table>
+    <tr>
+      <th>Section</th>
+      <th>Max Marks</th>
+    </tr>
+    <tr>
+      <td>MCQ Section</td>
+      <td><input id="maxMcq" type="number" placeholder="Max MCQ Marks"></td>
+    </tr>
+    <tr>
+      <td>Short Answer Section</td>
+      <td><input id="maxShort" type="number" placeholder="Max Short Answer Marks"></td>
+    </tr>
+    <tr>
+      <td>Long Answer Section</td>
+      <td><input id="maxLong" type="number" placeholder="Max Long Answer Marks"></td>
+    </tr>
+    <tr>
+      <td>Total Maximum Marks</td>
+      <td><button onclick="calculateTotalMax()">Calculate Total</button> <p id="totalMaxMarks"></p></td>
+    </tr>
+  </table>
+
+  <h4>Reg.No: <input id="regNo" type="text"></h4> 
+  <button id="getAnswerFields" onclick="generateAnswerFields()">Generate Answer Fields</button>
+  <br><br>
+
+  <!-- Step 2: Allocated Marks for each answer -->
+  <h3>Step 2: Allot Marks for Each Answer</h3>
+  <div id="allotted-marks"></div>
+  <center>
+    <button onclick="calculateResults()">Calculate Results</button>
+  </center>
+
+  <!-- Step 3: Display Results -->
+  <h3>Step 3: Final Results</h3>
+  <div class="container">
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>Section</th>
+          <th>Max Marks</th>
+          <th>Marks Allocated</th>
+        </tr>
+      </thead>
+      <tbody id="evaluationResults">
+        <!-- Results will be inserted here -->
+      </tbody>
+    </table>
+    <p id="finalMarks"></p>
+    <center>
+      <button onclick="submitResults()">Submit</button>
+    </center>
+  </div>
+
+  <script>
+    // Function to calculate the total maximum marks
+    function calculateTotalMax() {
+      const maxMcq = parseFloat(document.getElementById('maxMcq').value) || 0;
+      const maxShort = parseFloat(document.getElementById('maxShort').value) || 0;
+      const maxLong = parseFloat(document.getElementById('maxLong').value) || 0;
+
+      const totalMax = maxMcq + maxShort + maxLong;
+      document.getElementById('totalMaxMarks').textContent = 'Total Maximum Marks: ' + totalMax;
+    }
+
+    // Function to generate input fields for the evaluator to allot marks
+    function generateAnswerFields() {
+      const maxMcq = parseFloat(document.getElementById('maxMcq').value) || 0;
+      const maxShort = parseFloat(document.getElementById('maxShort').value) || 0;
+      const maxLong = parseFloat(document.getElementById('maxLong').value) || 0;
+
+      let content = '<table border="1"><tr><th>Section</th><th>Allotted Marks</th></tr>';
+
+      // MCQ Section
+      content += '<tr><td>MCQ Section</td><td>';
+      for (let i = 1; i <= maxMcq; i++) {
+        content += `<label>${i}. </label><input type="number" id="allocatedMcq${i}" max="1" style="width: 100px;" placeholder="Marks"> `;
+      }
+      content += '</td></tr>';
+
+      // Short Answer Section
+      const shortAnswerCount = Math.ceil(maxShort / 2);
+      content += '<tr><td>Short Answer Section</td><td>';
+      for (let i = 1; i <= shortAnswerCount; i++) {
+        content += `<label>${i}. </label><input type="number" id="allocatedShort${i}" max="2" style="width: 100px;" placeholder="Marks"> `;
+      }
+      content += '</td></tr>';
+
+      // Long Answer Section
+      const longAnswerCount = Math.ceil(maxLong / 5);
+      content += '<tr><td>Long Answer Section</td><td>';
+      for (let i = 1; i <= longAnswerCount; i++) {
+        content += `<label>${i}. </label><input type="number" id="allocatedLong${i}" max="5" style="width: 100px;" placeholder="Marks"> `;
+      }
+      content += '</td></tr>';
+
+      content += '</table>';
+
+      // Insert the generated fields into the allotted-marks div
+      document.getElementById('allotted-marks').innerHTML = content;
+    }
+
+    // Function to calculate and display the results
+    function calculateResults() {
+      const maxMcq = parseFloat(document.getElementById('maxMcq').value) || 0;
+      const maxShort = parseFloat(document.getElementById('maxShort').value) || 0;
+      const maxLong = parseFloat(document.getElementById('maxLong').value) || 0;
+
+      const allocatedMcq = [...Array(Math.ceil(maxMcq)).keys()].reduce((sum, i) => sum + (parseFloat(document.getElementById(`allocatedMcq${i + 1}`).value) || 0), 0);
+      const allocatedShort = [...Array(Math.ceil(maxShort / 2)).keys()].reduce((sum, i) => sum + (parseFloat(document.getElementById(`allocatedShort${i + 1}`).value) || 0), 0);
+      const allocatedLong = [...Array(Math.ceil(maxLong / 5)).keys()].reduce((sum, i) => sum + (parseFloat(document.getElementById(`allocatedLong${i + 1}`).value) || 0), 0);
+
+      const totalMaxMarks = maxMcq + maxShort + maxLong;
+      const totalAllocatedMarks = allocatedMcq + allocatedShort + allocatedLong;
+
+      // Update the results table
+      const resultsTableBody = document.getElementById('evaluationResults');
+      resultsTableBody.innerHTML = `
+        <tr><td>MCQ Section</td><td>${maxMcq}</td><td>${allocatedMcq}</td></tr>
+        <tr><td>Short Answer Section</td><td>${maxShort}</td><td>${allocatedShort}</td></tr>
+        <tr><td>Long Answer Section</td><td>${maxLong}</td><td>${allocatedLong}</td></tr>
+        <tr><td><strong>Total</strong></td><td><strong>${totalMaxMarks}</strong></td><td><strong>${totalAllocatedMarks}</strong></td></tr>
+      `;
+
+      // Display final marks and grade
+      let grade = 'F';
+      if (totalAllocatedMarks >= 80) {
+        grade = 'A';
+      } else if (totalAllocatedMarks >= 60) {
+        grade = 'B';
+      } else if (totalAllocatedMarks >= 40) {
+        grade = 'C';
+      }
+
+      document.getElementById('finalMarks').textContent = `Final Marks: ${totalAllocatedMarks} / ${totalMaxMarks} (Grade: ${grade})`;
+    }
+
+    // Function to submit and go to the next page
+    function submitResults() {
+      calculateResults(); // Ensure the results are calculated before submission
+      localStorage.setItem('evaluationResults', document.getElementById('evaluationResults').innerHTML);
+      localStorage.setItem('finalMarks', document.getElementById('finalMarks').textContent);
+      window.location.href = "resultPage.html";
+    }
+  </script>
+</body>
+</html>

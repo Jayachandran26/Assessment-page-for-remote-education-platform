@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>வினா உருவாக்கம்</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        .input-p[data-placeholder]:empty:before {
+            content: attr(data-placeholder);
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>வினா உருவாக்கம்</h1>
+</header>
+<div id="toast" class="toast" style="display: none;">Please add at least one question before submitting!</div>
+<main>
+    <div id="exam-details" class="container">
+        <label for="subject">பாடம்:</label>
+        <input type="text" id="subject" placeholder="பாடம் பெயர்" required />
+
+        <label for="totalMarks">மொத்த மதிப்பெண்கள்:</label>
+        <input type="number" id="totalMarks" placeholder="மதிப்பெண்கள்" required />
+
+        <label for="instructions">குறிப்புகள்:</label>
+        <p id="instructions" class="input-p" contenteditable="true" data-placeholder="குறிப்புகளை உள்ளிடவும்"></p>
+
+        <label for="duration">தேர்வு நேரம் (நிமிடங்கள்):</label>
+        <input type="number" id="duration" placeholder="நேரம் (நிமிடங்கள்)" required />
+
+        <button id="startButton" onclick="startExamCreation()">தொடங்கு</button>
+    </div>
+
+    <div id="assessmentForm" class="container" style="display: none">
+        <div id="mcq-container"></div>
+        <div id="short-answer-container"></div>
+        <div id="long-answer-container"></div>
+
+        <div id="question-buttons">
+            <button style="width: 300px;" id="add-mcq" onclick="addMCQ()">MCQ சேர்க்க</button><br /><br />
+            <button style="width: 300px;" id="add-short-answer" onclick="addShortAnswer()">குறுகிய பதில் சேர்க்க</button><br /><br />
+            <button style="width: 300px;" id="add-long-answer" onclick="addLongAnswer()">விளக்கமான பதில் சேர்க்க</button><br /><br />
+            <button class="submit-btn" onclick="submitAssessment()">சமர்ப்பி</button>
+        </div>
+    </div>
+    <button class="back-btn" onclick="redirectToAdminPage()">Admin</button>
+</main>
+<script>
+    function startExamCreation() {
+        const subject = document.getElementById("subject").value;
+        const totalMarks = document.getElementById("totalMarks").value;
+        const instructions = document.getElementById("instructions").innerText;
+        const duration = document.getElementById("duration").value;
+
+        if (subject && totalMarks && instructions && duration) {
+            document.getElementById("exam-details").style.display = "none";
+            document.getElementById("assessmentForm").style.display = "block";
+        } else {
+            alert("தரவை நிரப்பவும்");
+        }
+    }
+
+    function addMCQ() {
+        const mcqContainer = document.getElementById("mcq-container");
+        const mcqForm = document.createElement("div");
+        mcqForm.className = "mcq";
+        mcqForm.innerHTML = `
+            <label>கேள்வி:</label>
+            <input type="text" class="question" placeholder="பல தேர்வு கேள்வியை உள்ளிடவும்">
+            <label>விடை A:</label>
+            <input type="text" class="option-a" placeholder="விடை A">
+            <label>விடை B:</label>
+            <input type="text" class="option-b" placeholder="விடை B">
+            <label>விடை C:</label>
+            <input type="text" class="option-c" placeholder="விடை C">
+            <label>விடை D:</label>
+            <input type="text" class="option-d" placeholder="விடை D">
+            <button type="button" class="remove-question" onclick="removeQuestion(this)">நீக்கவும்</button>
+        `;
+        mcqContainer.appendChild(mcqForm);
+    }
+
+    function addShortAnswer() {
+        const shortAnswerContainer = document.getElementById("short-answer-container");
+        const shortAnswerForm = document.createElement("div");
+        shortAnswerForm.className = "short-answer";
+        shortAnswerForm.innerHTML = `
+            <label>சுருக்கமான பதில் கேள்வி:</label>
+            <div class="input-p" contenteditable="true" data-placeholder="குறுகிய பதில் கேள்வியை உள்ளிடவும்"></div>
+            <button type="button" class="remove-question" onclick="removeQuestion(this)">நீக்கவும்</button>
+        `;
+        shortAnswerContainer.appendChild(shortAnswerForm);
+    }
+
+    function addLongAnswer() {
+        const longAnswerContainer = document.getElementById("long-answer-container");
+        const longAnswerForm = document.createElement("div");
+        longAnswerForm.className = "long-answer";
+        longAnswerForm.innerHTML = `
+            <label>நீண்ட பதில் கேள்வி:</label>
+            <div class="input-p" contenteditable="true" data-placeholder="விளக்கமான பதில் கேள்வியை உள்ளிடவும்"></div>
+            <button type="button" class="remove-question" onclick="removeQuestion(this)">நீக்கவும்</button>
+        `;
+        longAnswerContainer.appendChild(longAnswerForm);
+    }
+
+    function removeQuestion(button) {
+        const questionContainer = button.parentElement;
+        questionContainer.parentElement.removeChild(questionContainer);
+    }
+
+    function submitAssessment() {
+        const mcqQuestions = [];
+        const shortAnswerQuestions = [];
+        const longAnswerQuestions = [];
+
+        // Collect MCQ questions
+        document.querySelectorAll("#mcq-container .mcq").forEach((mcq) => {
+            const questionText = mcq.querySelector(".question").value;
+            const options = {
+                A: mcq.querySelector(".option-a").value,
+                B: mcq.querySelector(".option-b").value,
+                C: mcq.querySelector(".option-c").value,
+                D: mcq.querySelector(".option-d").value,
+            };
+            mcqQuestions.push({ question: questionText, options });
+        });
+
+        // Collect Short Answer questions
+        document.querySelectorAll("#short-answer-container .short-answer").forEach((answer) => {
+            const questionText = answer.querySelector(".input-p").innerText.trim();
+            shortAnswerQuestions.push({ question: questionText });
+        });
+
+        // Collect Long Answer questions
+        document.querySelectorAll("#long-answer-container .long-answer").forEach((answer) => {
+            const questionText = answer.querySelector(".input-p").innerText.trim();
+            longAnswerQuestions.push({ question: questionText });
+        });
+
+        // Prepare the data
+        const assessmentData = {
+            mcqs: mcqQuestions,
+            shortAnswers: shortAnswerQuestions,
+            longAnswers: longAnswerQuestions,
+            subject: document.getElementById("subject").value,
+            totalMarks: document.getElementById("totalMarks").value,
+            instructions: document.getElementById("instructions").innerText,
+            duration: document.getElementById("duration").value,
+        };
+
+        // Store assessment data in localStorage
+        localStorage.setItem("assessmentData", JSON.stringify(assessmentData));
+        alert("வினாக்கள் வெற்றிகரமாக சமர்ப்பிக்கப்பட்டன!");
+
+        // Redirect to Syllabus Page
+        window.location.href = "syllabus.html"; // Change to your actual syllabus page
+    }
+
+    function redirectToAdminPage() {
+        window.location.href = "admin.html"; // Change to your actual admin page
+    }
+</script>
+</body>
+</html>
